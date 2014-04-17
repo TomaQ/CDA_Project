@@ -32,7 +32,13 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
-
+    *op = (instruction & 0xfc000000) >> 26;
+	*r1 = (instruction & 0x03e00000) >> 21;
+	*r2 = (instruction & 0x001f0000) >> 16;
+	*r3 = (instruction & 0x0000f800) >> 11;
+	*funct = instruction & 0x0000003f;
+	*offset = instruction & 0x0000ffff;
+	*jsec = instruction & 0x03ffffff;
 }
 
 
@@ -48,7 +54,8 @@ int instruction_decode(unsigned op,struct_controls *controls)
 /* 5 Points */
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
-
+    *data1 = Reg[r1];
+    *data2 = Reg[r2];
 }
 
 
@@ -56,7 +63,10 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
-    *extended_value = *extended_value + (offset << 16);
+    if((offset >> 15) == 1) //if it is a negative number
+        *extended_value = offset | 0xffff0000;
+    else //should be a positive number
+        *extended_value = offset & 0x0000ffff;
 }
 
 /* ALU operations */
@@ -70,7 +80,33 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+    if(MemRead == 1)
+    {
+        if(ALUresult % 4 == 0)
+        {
+            *memdata = Mem[ALUresult >> 2];
+        }
 
+        else
+        {
+            return 1;
+        }
+    }
+
+    if(MemWrite == 1)
+    {
+        if(ALUresult % 4 == 0)
+        {
+            Mem[ALUresult >> 2] = data2;
+        }
+
+        else
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 
@@ -78,13 +114,38 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
+    if(RegWrite == 1)
+    {
+        if(MemtoReg == 1)
+        {
+            Reg[r2] = memdata;
+        }
+        else
+        {
+            if(RegDst == 1)
+            {
+                Reg[r3] = ALUresult;
+            }
 
+            else
+            {
+                Reg[r2] = ALUresult;
+            }
+        }
+    }
 }
 
 /* PC update */
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
+    *PC += 4;
+
+    if(Zero == 1 && Branch == 1)
+        *PC += extended_value << 2;
+
+    if(Jump == 1)
+        *PC = (jsec << 2) | (*PC & 0xf0000000);
 
 }
 
