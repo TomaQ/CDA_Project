@@ -5,4 +5,4 @@ Project for CDA class
 
 Compile: gcc -o spimcore spimcore.c project.c
 
-Run: ./spimcore '<filename>'.asc
+Run: ./spimcore filename.asc
