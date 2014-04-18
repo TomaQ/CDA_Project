@@ -8,11 +8,12 @@
 /* 10 Points */
 void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 {
-    switch((int)ALUControl)
+
+    switch((int)ALUControl) //performs operations based on the ALUControl
     {
         case 000:
-            *ALUresult = A +B;
-            break
+            *ALUresult = A + B;
+            break;
 		case 001:
 			*ALUresult = A - B;
 			break;
@@ -41,7 +42,7 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 			*ALUresult = ~A;
     }
 
-    if(ALUresult == 0)
+    if(ALUresult == 0) //if the result was zero then set Zero to 1
         *Zero = 1;
     else
         *Zero = 0;
@@ -52,9 +53,11 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 /* 10 Points */
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
+
     if(PC%4 == 0) //checks if the memory address is word aligned
     {
         *instruction = Mem[PC >> 2];
+
         if(*instruction < 8) //chekcs if the instruction is legal then return 0
             return 0;
         else
@@ -62,6 +65,7 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
     }
 
     return 1;//the address was not memory aligned
+
 }
 
 
@@ -69,13 +73,15 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
-    *op = (instruction & 0xfc000000) >> 26;
+
+    *op = (instruction & 0xfc000000) >> 26; //partitions the instruction bits and sets them to each variable
 	*r1 = (instruction & 0x03e00000) >> 21;
 	*r2 = (instruction & 0x001f0000) >> 16;
 	*r3 = (instruction & 0x0000f800) >> 11;
 	*funct = instruction & 0x0000003f;
 	*offset = instruction & 0x0000ffff;
 	*jsec = instruction & 0x03ffffff;
+
 }
 
 
@@ -84,7 +90,8 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 /* 15 Points */
 int instruction_decode(unsigned op,struct_controls *controls)
 {
-    switch(op)
+
+    switch(op) //decodes the op code and sets the controls accordingly
     {
         case 0:
             controls->MemtoReg = 0;
@@ -190,14 +197,17 @@ int instruction_decode(unsigned op,struct_controls *controls)
     }
 
     return 0;
+
 }
 
 /* Read Register */
 /* 5 Points */
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
-    *data1 = Reg[r1];
+
+    *data1 = Reg[r1]; //sets the data to the registers
     *data2 = Reg[r2];
+
 }
 
 
@@ -205,10 +215,13 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 /* 10 Points */
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
+
     if((offset >> 15) == 1) //if it is a negative number
         *extended_value = offset | 0xffff0000;
+
     else //should be a positive number
         *extended_value = offset & 0x0000ffff;
+
 }
 
 /* ALU operations */
@@ -216,13 +229,12 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
 
-    //  check to see which data is being changed based on the ALUsrc
-    if(ALUSrc == 1)
+    if(ALUSrc == 1) //sees which data is being used
         data2 = extended_value;
 
     if(ALUOp == 7)
     {
-        switch(funct)
+        switch(funct) //sets the ALUOp based on the function
         {
             case 32:
                 ALUOp = 0;
@@ -250,45 +262,42 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
                 break;
             default:
                 return 1;
-            }
-            ALU(data1,data2, ALUOp,ALUresult,Zero);
         }
-        else
-            ALU(data1,data2,ALUOp,ALUresult,Zero);
-        return 0;
+
+        ALU(data1, data2, ALUOp, ALUresult, Zero); //calls the ALU to perform the operations
+
+    }
+
+    else
+        ALU(data1, data2, ALUOp, ALUresult, Zero); //doesnt change the ALUOp since the function doesnt matter
+
+    return 0;
+
 }
 
 /* Read / Write Memory */
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    if(MemRead == 1)
-    {
-        if(ALUresult % 4 == 0)
-        {
-            *memdata = Mem[ALUresult >> 2];
-        }
 
+    if(MemRead == 1)//sees if we're reading from memory
+    {
+        if(ALUresult % 4 == 0) //checks to see if it's word aligned
+            *memdata = Mem[ALUresult >> 2]; //sets the memory to the result
         else
-        {
             return 1;
-        }
     }
 
-    if(MemWrite == 1)
+    if(MemWrite == 1) //sees if we're writing to memory
     {
-        if(ALUresult % 4 == 0)
-        {
+        if(ALUresult % 4 == 0) //checks for word alignment
             Mem[ALUresult >> 2] = data2;
-        }
-
         else
-        {
             return 1;
-        }
     }
 
     return 0;
+
 }
 
 
@@ -296,38 +305,35 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
-    if(RegWrite == 1)
+
+    if(RegWrite == 1) //checks to see if we're writing
     {
-        if(MemtoReg == 1)
-        {
+        if(MemtoReg == 1) //sees if we're putting what's in memory in the register
             Reg[r2] = memdata;
-        }
-        else
+        else //sees which register to use
         {
             if(RegDst == 1)
-            {
                 Reg[r3] = ALUresult;
-            }
 
             else
-            {
                 Reg[r2] = ALUresult;
-            }
         }
     }
+
 }
 
 /* PC update */
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
-    *PC += 4;
 
-    if(Zero == 1 && Branch == 1)
-        *PC += extended_value << 2;
+    *PC += 4; //updates the address
 
-    if(Jump == 1)
-        *PC = (jsec << 2) | (*PC & 0xf0000000);
+    if(Zero == 1 && Branch == 1) //if there's a branch
+        *PC += extended_value << 2; //jumps to the branch
+
+    if(Jump == 1) //if there's a jump
+        *PC = (jsec << 2) | (*PC & 0xf0000000); //set the address to the jump
 
 }
 
