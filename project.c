@@ -25,9 +25,9 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
             break;
 		case 011:
 			if(A < B)
-                ALUresult = 1;
+                *ALUresult = 1;
             else
-                ALUresult = 0;
+                *ALUresult = 0;
 			break;
 		case 100:
 			*ALUresult = A & B;
@@ -192,7 +192,7 @@ int instruction_decode(unsigned op,struct_controls *controls)
             controls->ALUOp = 0;
             controls->Jump = 1;
             break;
-        default:
+        default: //not a correct op code
             return 1;
     }
 
@@ -260,7 +260,7 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
             case 39:
                 ALUOp = 7;
                 break;
-            default:
+            default: //not a correct function
                 return 1;
         }
 
@@ -285,7 +285,7 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
         if(ALUresult % 4 == 0) //checks to see if it's word aligned
             *memdata = Mem[ALUresult >> 2]; //sets the memory to the result
         else
-            return 1;
+            return 1; //not word aligned
     }
 
     if(MemWrite == 1) //sees if we're writing to memory
@@ -293,7 +293,7 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
         if(ALUresult % 4 == 0) //checks for word alignment
             Mem[ALUresult >> 2] = data2;
         else
-            return 1;
+            return 1; //not word aligned
     }
 
     return 0;
