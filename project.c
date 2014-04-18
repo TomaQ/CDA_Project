@@ -84,7 +84,112 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsi
 /* 15 Points */
 int instruction_decode(unsigned op,struct_controls *controls)
 {
+    switch(op)
+    {
+        case 0:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 1;
+            controls->ALUSrc = 0;
+            controls->Branch = 0;
+            controls->ALUOp = 7;
+            controls->Jump = 0;
+            break;
+        case 8:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 0;
+            controls->ALUSrc = 1;
+            controls->Branch = 0;
+            controls->ALUOp = 0;
+            controls->Jump = 0;
+            break;
+        case 15:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 0;
+            controls->ALUSrc = 1;
+            controls->Branch = 0;
+            controls->ALUOp = 6;
+            controls->Jump = 0;
+            break;
+        case 35:
+            controls->MemtoReg = 1;
+            controls->MemRead = 1;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 0;
+            controls->ALUSrc = 1;
+            controls->Branch = 0;
+            controls->ALUOp = 0;
+            controls->Jump = 0;
+            break;
+        case 43:
+            controls->MemtoReg = 2;
+            controls->MemRead = 0;
+            controls->RegWrite = 0;
+            controls->MemWrite = 1;
+            controls->RegDst = 2;
+            controls->ALUSrc = 1;
+            controls->Branch = 0;
+            controls->ALUOp = 0;
+            controls->Jump = 0;
+            break;
+        case 4:
+            controls->MemtoReg = 2;
+            controls->MemRead = 0;
+            controls->RegWrite = 0;
+            controls->MemWrite = 0;
+            controls->RegDst = 2;
+            controls->ALUSrc = 0;
+            controls->Branch = 1;
+            controls->ALUOp = 1;
+            controls->Jump = 0;
+            break;
+        case 10:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 1;
+            controls->ALUSrc = 0;
+            controls->Branch = 0;
+            controls->ALUOp = 2;
+            controls->Jump = 0;
+            break;
+        case 11:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 1;
+            controls->MemWrite = 0;
+            controls->RegDst = 1;
+            controls->ALUSrc = 0;
+            controls->Branch = 0;
+            controls->ALUOp = 3;
+            controls->Jump = 0;
+            break;
+        case 2:
+            controls->MemtoReg = 0;
+            controls->MemRead = 0;
+            controls->RegWrite = 0;
+            controls->MemWrite = 0;
+            controls->RegDst = 0;
+            controls->ALUSrc = 0;
+            controls->Branch = 0;
+            controls->ALUOp = 0;
+            controls->Jump = 1;
+            break;
+        default:
+            return 1;
+    }
 
+    return 0;
 }
 
 /* Read Register */
@@ -111,6 +216,46 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
 
+    //  check to see which data is being changed based on the ALUsrc
+    if(ALUSrc == 1)
+        data2 = extended_value;
+
+    if(ALUOp == 7)
+    {
+        switch(funct)
+        {
+            case 32:
+                ALUOp = 0;
+                break;
+            case 34:
+                ALUOp = 1;
+                break;
+            case 42:
+                ALUOp = 2;
+                break;
+            case 43:
+                ALUOp = 3;
+                break;
+            case 36:
+                ALUOp = 4;
+                break;
+            case 37:
+                ALUOp = 5;
+                break;
+            case 4:
+                ALUOp = 6;
+                break;
+            case 39:
+                ALUOp = 7;
+                break;
+            default:
+                return 1;
+            }
+            ALU(data1,data2, ALUOp,ALUresult,Zero);
+        }
+        else
+            ALU(data1,data2,ALUOp,ALUresult,Zero);
+        return 0;
 }
 
 /* Read / Write Memory */
